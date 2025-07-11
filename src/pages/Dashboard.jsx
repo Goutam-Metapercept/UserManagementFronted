@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from '../service/authService';
-import api from '../service/authService'; // You exported api as default
+import api from '../service/authService'; // 'api' is the default export
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
+  const [editedUser, setEditedUser] = useState(null);
+  const [users, setUsers] = useState([]);
   const [activeSection, setActiveSection] = useState('home');
   const [loading, setLoading] = useState(true);
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [isEditing, setEditing] = useState(false);
-  const [editedUser, setEditedUser] = useState(null);
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [users, setUsers] = useState([]); // Assuming this was missing
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false); // Reserved for future use
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -43,6 +43,7 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
+      {/* Sidebar */}
       <div className="dashboard-sidebar">
         <div
           className={`dashboard-menu-item ${activeSection === 'home' ? 'active' : ''}`}
@@ -69,12 +70,65 @@ const Dashboard = () => {
           Settings
         </div>
       </div>
+
+      {/* Main Content */}
       <div className="dashboard-content">
-        {/* Render section based on activeSection */}
-        {activeSection === 'home' && <div>Welcome, {user?.username}</div>}
-        {activeSection === 'profile' && <div>Profile Section (editing: {isEditing.toString()})</div>}
-        {activeSection === 'users' && isAdmin && <div>User List Coming Soon</div>}
-        {activeSection === 'settings' && <div>Settings Section</div>}
+        {activeSection === 'home' && (
+          <div className="dashboard-home">
+            <h2>Welcome, {user?.username}</h2>
+            <p>Some Content</p>
+          </div>
+        )}
+
+        {activeSection === 'profile' && (
+          <div className="dashboard-profile">
+            <h2>User Profile Information</h2>
+            <div className="profile-field">
+              <label>Username:</label>
+              <input 
+              type="text"
+              name="username"
+              value={isEditing?editedUser.username:user.username}
+              onChange={handleInputChange}
+              readOnly={!isEditing}
+            />
+            </div>
+            <div className="profile-field">
+              <label>Email:</label>
+              <input 
+              type="email"
+              name="email"
+              value={isEditing?editedUser.email:user.email}
+              onChange={handleInputChange}
+              readOnly={!isEditing}
+            />
+            </div>
+          
+          </div>
+        )}
+       <div className='profile-actions'>
+        {isEditing ? (
+          <>
+          <button className='btn btn-primary' onClick={handleEditToggle}>Edit</button>
+          <button className='btn btn-secondary' onClick={setIsPasswordModalOpen}>Change Password(true)</button>
+        ) : (
+          <button className='btn btn-primary' onClick={handleSaveProfile}>Save</button>
+          <button className='btn btn-secondary' onClick={handleCancelEdit}>Save</button>
+        )}}
+       </div>
+       
+       
+
+        {activeSection === 'settings' && (
+          <div className="dashboard-settings">
+            <h2>Settings Section</h2>
+          </div>
+        )}
+         {activeSection === 'users' && isAdmin && (
+          
+            <usersTable/>
+      
+        )}
       </div>
     </div>
   );
