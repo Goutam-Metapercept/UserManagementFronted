@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import './Login.css';
-import authService from '../services/authService.js';
+import "../styles/Login.css";
+import { authService } from '../service/authService';
 
 const Login = () => {
   const [errors, setErrors] = useState({});
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const Login = () => {
     e.preventDefault();
     const validationErrors = {};
 
-    if (!email.trim()) validationErrors.email = 'Email is required';
+    if (!username.trim()) validationErrors.username = 'Username is required';
     if (!password) validationErrors.password = 'Password is required';
 
     if (Object.keys(validationErrors).length > 0) {
@@ -23,11 +23,11 @@ const Login = () => {
     }
 
     try {
-      await authService.login({ email, password });
-      navigate('/');
+      await authService.login(username, password);
+      navigate('/dashboard');
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        setErrors({ server: 'Invalid email or password' });
+        setErrors({ server: 'Invalid username or password' });
       } else {
         setErrors({ server: 'An unexpected error occurred. Please try again later.' });
       }
@@ -41,16 +41,16 @@ const Login = () => {
         {errors.server && <div className="error-message server-error">{errors.server}</div>}
 
         <div className="form-group">
-          <label htmlFor="email">Email</label>
+          <label htmlFor="username">Username</label>
           <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={errors.email ? 'error' : ''}
-            placeholder="Enter your email"
+            type="text"
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className={errors.username ? 'error' : ''}
+            placeholder="Enter your username"
           />
-          {errors.email && <span className="error-message">{errors.email}</span>}
+          {errors.username && <span className="error-message">{errors.username}</span>}
         </div>
 
         <div className="form-group">

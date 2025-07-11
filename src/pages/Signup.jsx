@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Signup.css';
+import '../styles/Signup.css';
+import { authService } from '../service/authService'; // Adjust the path if needed
 
 const Signup = () => {
   const [errors, setErrors] = useState({});
@@ -15,50 +16,47 @@ const Signup = () => {
     e.preventDefault();
     const validationErrors = {};
 
-    // Username validation
     if (!username.trim()) {
       validationErrors.username = 'Username is required';
     }
 
-    // Email validation
     if (!email.trim()) {
       validationErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       validationErrors.email = 'Email must be valid';
     }
 
-    // Password validation
     if (!password) {
       validationErrors.password = 'Password is required';
     } else if (password.length < 6) {
       validationErrors.password = 'Password must be at least 6 characters';
     }
 
-    // Confirm password validation
     if (confirmPassword !== password) {
       validationErrors.confirmPassword = 'Passwords do not match';
     }
 
-    // If there are validation errors, update the state
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
-    try{
-        await authService.signupNormalUser(username, email, password);
-        navigate('/login');
-    }catch(error){
-    // If no errors, proceed (e.g. send data to backend)
-        console.error("Signup failed:", error);
-        setErrors({ general: "Signup failed. Please try again." });
+    try {
+      await authService.signupNormalUser(username, email, password);
+      navigate('/login');
+    } catch (error) {
+      console.error("Signup failed:", error);
+      setErrors({ general: "Signup failed. Please try again." });
     }
-  
   };
 
   return (
-    <div className="signup-container">
-      <form onSubmit={handleSignUp}>
+    <div className="signup-container margin-left: 50px">
+      <form onSubmit={handleSignUp} className="signup-form">
+        <h2>Sign Up</h2>
+
+        {errors.general && <div className="error-message">{errors.general}</div>}
+
         <div className="form-group">
           <label>Username</label>
           <input
@@ -104,12 +102,10 @@ const Signup = () => {
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Confirm password"
           />
-          {errors.confirmPassword && (
-            <p className="error">{errors.confirmPassword}</p>
-          )}
+          {errors.confirmPassword && <p className="error">{errors.confirmPassword}</p>}
         </div>
 
-        <button type="submit">Sign Up</button>
+        <button type="submit" className="signup-button">Sign Up</button>
       </form>
     </div>
   );

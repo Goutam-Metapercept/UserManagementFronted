@@ -1,0 +1,200 @@
+
+/* Dashboard layout styles */
+.dashboard-container{
+    display: flex;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-top: 30px;
+    min-height: 500px;
+
+}
+.dashboard-sidebar{
+  width: 20px;
+    background-color: #f3f4f6;
+    padding: 20px;
+    border-right: 1px solid #e5e7eb; 
+    border-radius: 8px 0 0 8px;
+
+
+}   
+.dashboard-menu-item {
+  padding: 12px 20px;
+  cursor: pointer;
+  color: #333;
+  transform: background-color 0.3s ease;
+  
+}
+.dashboard-menu-item:hover {
+    background-color: #e5e7eb;
+  
+}
+.dashboard-menu-item.active {
+    background-color: #e5e7eb;
+    margin-top: 20px;
+}
+.dashboard-content {
+    flex: 1;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 0 8px 8px 0;
+}
+.profile-details{
+    background-color: #f9f9f9;
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.profile-field{
+    margin-bottom: 15px;
+
+}
+.profile-field label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+.profile-field input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    color: #333;
+}
+.profile-field input:read-only {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+}
+.profile-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+.btn{
+    padding:10px 15px;
+    border:none;
+    border-radius: 4px;
+    cursor: pointer;   
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    
+}
+.btn-primary {
+    background-color: #4a90e2;
+    color: white;
+}
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+.btn-secondary {
+    background-color: #6c757d;
+}
+.btn-secondary:hover {
+    background-color: #545b62;
+}
+.loading-spinner{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 1.5rem;
+    color: #007bff;
+
+
+}
+.error-message{
+    color: red;
+    font-size: 1.2rem;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index:1000;
+}
+.modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    max-width: 90%;
+}
+.modal-content h2 {
+    margin-bottom: 20px;
+    text-align: center;
+    color: #333;
+}
+.modal-content .modal-field {
+    margin-bottom: 15px;
+}
+.modal-field label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+.modal-field input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    color: #333;
+}
+.modal-actions{
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;  
+    margin-top: 20px;
+}
+.users-table-container {
+    width: 100%;
+    overflow: auto;
+}
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+.users-table th, .users-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+.users-table th {
+    background-color: #f3f4f6;
+    font-weight: bold;
+    text-transform: uppercase;
+    
+}
+.users-table tr:nth-child {
+    background-color: #f9f9f9;
+}
+.users-table .btn-danger {
+    background-color: #dc3545;
+    color: white;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+
+}
+.users-table .btn-danger:hover {
+    background-color: #c82333;
+}
