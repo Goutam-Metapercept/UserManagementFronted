@@ -1,16 +1,15 @@
 import axios from 'axios';
 
-const BASE_URL = "http://localhost:8080/api";
+const BASE_URL = 'http://localhost:8080/api';
 
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   },
-  withCredentials: true // Important for handling cookie cross-origin
+  withCredentials: true,
 });
 
-// Request interceptor for adding auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -22,7 +21,6 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -33,34 +31,33 @@ api.interceptors.response.use(
           window.location.href = '/login';
           break;
         case 403:
-          console.error("Access forbidden");
+          console.error('Access forbidden');
           break;
         case 404:
-          console.error("Resource not found");
+          console.error('Resource not found');
           break;
         case 500:
-          console.error("Server error");
+          console.error('Server error');
           break;
         default:
-          console.error("An error occurred:", error.response.data);
+          console.error('An error occurred:', error.response.data);
       }
     } else if (error.request) {
-      console.error("No response received from server:", error.request);
+      console.error('No response received from server:', error.request);
     } else {
-      console.error("Request setup error:", error.message);
+      console.error('Request setup error:', error.message);
     }
     return Promise.reject(error);
   }
 );
 
-// Auth service methods
 const authService = {
   signupNormalUser: async (username, email, password) => {
     try {
       const response = await api.post('/auth/registernormaluser', {
         username,
         email,
-        password
+        password,
       });
       return response.data;
     } catch (error) {
@@ -68,18 +65,27 @@ const authService = {
     }
   },
 
-  login: async (username, password) => {
-    try {
-      const response = await api.post('/auth/login', { username, password });
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-      }
-      const user = await authService.getCurrentUser();
-      return user;
-    } catch (error) {
-      throw error;
-    }
-  },
+ login: async (username, password) => {
+  try {
+    console.log('Sending login request:', { username, password });
+    const response = await api.post('/auth/login', { username, password });
+    console.log('Login response:', response);
+
+    const { jwtToken, userDTO } = response.data;
+
+    // Optional: Store JWT token if you want to reuse it manually
+    localStorage.setItem('token', jwtToken);
+
+    // Store user object
+    localStorage.setItem('user', JSON.stringify(userDTO));
+
+    return userDTO; // return user object only if needed
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
+  }
+},
+
 
   getCurrentUser: async () => {
     try {
@@ -87,7 +93,7 @@ const authService = {
       localStorage.setItem('user', JSON.stringify(response.data));
       return response.data;
     } catch (error) {
-      console.error("Error fetching current user:", error);
+      console.error('Error fetching current user:', error);
       if (error.response && error.response.status === 401) {
         await authService.logout();
       }
@@ -95,21 +101,21 @@ const authService = {
     }
   },
 
-  getCurrentUserFromLocalStorage: () => {
-    const user = localStorage.getItem('user');
-    try {
-      return user ? JSON.parse(user) : null;
-    } catch (error) {
-      console.error("Error parsing user from localStorage:", error);
-      return null;
-    }
-  },
+getCurrentUserFromLocalStorage: () => {
+  const user = localStorage.getItem('user');
+  try {
+    return user ? JSON.parse(user) : null;
+  } catch (error) {
+    console.error('Error parsing user from localStorage:', error);
+    return null;
+  }
+},
 
   logout: async () => {
     try {
       await api.post('/auth/logout');
     } catch (error) {
-      console.error("Error during logout:", error);
+      console.error('Error during logout:', error);
     } finally {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -121,57 +127,67 @@ const authService = {
       const user = authService.getCurrentUserFromLocalStorage();
       return user !== null;
     } catch (error) {
-      console.error("Error checking authentication:", error);
+      console.error('Error checking authentication:', error);
       return false;
     }
   },
 
   updateProfile: async (userData) => {
     try {
-      const response = await api.put(`/users/updateuser/${userData.id}`, userData);
+      const response = await api.put(
+        `/users/updateuser/${userData.id}`,
+        userData
+      );
       const updatedUser = response.data;
       localStorage.setItem('user', JSON.stringify(updatedUser));
       return updatedUser;
     } catch (error) {
-      console.error("Error updating profile:", error);
+      console.error('Error updating profile:', error);
       throw error;
     }
   },
+
   getAllUsers: async () => {
     try {
       const response = await api.get('/users/getallusers');
       return response.data;
     } catch (error) {
-      console.error("Error fetching all users:", error);
+      console.error('Error fetching all users:', error);
       throw error;
     }
   },
+
   deleteUser: async (userId) => {
     try {
       const response = await api.delete(`/users/deleteuser/${userId}`);
       return response.data;
     } catch (error) {
-      console.error("Error deleting user:", error);
+      console.error('Error deleting user:', error);
       throw error;
     }
   },
-  changePassword:async(currentPassword, newPassword,confirmPassword) => {
-    try{
-        const currentUser = authService.getCurrentUser()
-        if(!currentUser || !currentUser.id) {
-            throw new Error("User not found");
+
+  changePassword: async (currentPassword, newPassword, confirmPassword) => {
+    try {
+      const currentUser = authService.getCurrentUserFromLocalStorage();
+      if (!currentUser || !currentUser.id) {
+        throw new Error('User not found');
+      }
+      const response = await api.put(
+        `/users/changepassword/${currentUser.id}`,
+        {
+          currentPassword,
+          newPassword,
+          confirmPassword,
         }
-        const response = await api.put(`/users/changepassword/${currentUser.id}`, {
-            currentPassword,
-            newPassword,
-            confirmPassword
-        });
-        return response.data;
-        }catch(error){
-            console.error("Error changing password:", error);
-            throw error;
-        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error changing password:', error);
+      throw error;
     }
+  },
 };
 
 export { api as default, authService };
+// Response interceptor for error handling

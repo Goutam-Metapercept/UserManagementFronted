@@ -4,14 +4,15 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 200%;
+  height: 100vh;
   padding: 20px;
   background-color: #f8f9fa;
+
 }
 
 .home-title {
   font-size: 2.5rem;
-  color: #333;
+  color: #333;  
   margin-bottom: 30px;
 }
 

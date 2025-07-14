@@ -1,22 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from '../service/authService';
-import api from '../service/authService'; // 'api' is the default export
-
-
-import {Link,useNavigate} from 'react-router-dom';
 
 const PasswordModal = ({ isOpen, onClose, onSave }) => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
   const [error, setError] = useState('');
 
-  if (!isOpen)
-    return null;
+  if (!isOpen) return null;
 
   const handleSave = async () => {
-    //Basic validation
     if (!currentPassword || !newPassword || !confirmPassword) {
       setError('All fields are required');
       return;
@@ -35,79 +28,62 @@ const PasswordModal = ({ isOpen, onClose, onSave }) => {
     }
   };
 
-  return  (
-    <div className='modal-overlay'>
-      <div className='modal-content'>   
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
         <h2>Change Password</h2>
-        <div className='modal-field'>
+        <div className="modal-field">
           <label>Current Password:</label>
           <input
-            type='password'
+            type="password"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
           />
         </div>
-        <div className='modal-field'>
+        <div className="modal-field">
           <label>New Password:</label>
           <input
-            type='password'
+            type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
           />
         </div>
-        <div className='modal-field'>
+        <div className="modal-field">
           <label>Confirm New Password:</label>
           <input
-            type='password'
+            type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
         </div>
-        {error && <div className='error-message'>{error}</div>}
-        <div className='modal-actions'>
-          <button className='btn btn-primary' onClick={handleSave}>Save</button>
-          <button className='btn btn-secondary' onClick={onClose}>Cancel</button>
+        {error && <div className="error-message">{error}</div>}
+        <div className="modal-actions">
+          <button className="btn btn-primary" onClick={handleSave}>
+            Save
+          </button>
+          <button className="btn btn-secondary" onClick={onClose}>
+            Cancel
+          </button>
         </div>
       </div>
     </div>
   );
-}
+};
 
-const usersTable = () => {
-  const [allUsers, setAllUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await authService.getAllUsers();
-        setAllUsers(response.data);
-      } catch (err) {
-        setError('Failed to fetch users');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUsers();
-  }, []);
-  if (loading) return <div className='loading-spinner'>Loading...</div>;
-  if (error) return <div className='error-message'>{error}</div>;
-
-
+const UsersTable = ({ users, fetchUsers }) => {
   const handleDeleteUser = async (userId) => {
     try {
       await authService.deleteUser(userId);
-      setAllUsers(allUsers.filter(user => user.id !== userId));
+      fetchUsers(); // Refresh list
     } catch (error) {
       console.error('Error deleting user:', error);
       alert('Failed to delete user.');
     }
-  }
+  };
+
   return (
     <div className="users-table-container">
-      <h2>Manage All Users </h2>
+      <h2>Manage All Users</h2>
       <table className="users-table">
         <thead>
           <tr>
@@ -118,14 +94,19 @@ const usersTable = () => {
           </tr>
         </thead>
         <tbody>
-          {allUsers.map(user => (
+          {users.map((user) => (
             <tr key={user.id}>
               <td>{user.id}</td>
               <td>{user.username}</td>
               <td>{user.email}</td>
               <td>
-                <button className="btn btn-primary" onClick={() => handleDeleteUser(user.id)}>Edit</button>
-                <button className="btn btn-danger" onClick={() => console.log(`Delete user ${user.id}`)}>Delete</button>
+                <button className="btn btn-primary">Edit</button>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => handleDeleteUser(user.id)}
+                >
+                  Delete
+                </button>
               </td>
             </tr>
           ))}
@@ -133,7 +114,8 @@ const usersTable = () => {
       </table>
     </div>
   );
-}
+};
+
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [editedUser, setEditedUser] = useState(null);
@@ -159,20 +141,19 @@ const Dashboard = () => {
     };
 
     fetchUserData();
+    fetchUsers();
   }, []);
 
   const fetchUsers = async () => {
     try {
-      const response = await api.get('/users');
+      const response = await authService.getAllUsers();
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
     }
   };
 
-  const handleEditToggle = () => {
-    setEditing(true);
-  };
+  const handleEditToggle = () => setEditing(true);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -192,42 +173,28 @@ const Dashboard = () => {
     }
   };
 
-
   const handleCancelEdit = () => {
     setEditedUser(user);
     setEditing(false);
   };
 
-  if (loading) return <div className='loading-spinner'>Loading...</div>;
+  if (loading) return <div className="loading-spinner">Loading...</div>;
 
   return (
     <div className="dashboard-container">
       {/* Sidebar */}
       <div className="dashboard-sidebar">
-        <div
-          className={`dashboard-menu-item ${activeSection === 'home' ? 'active' : ''}`}
-          onClick={() => setActiveSection('home')}
-        >
-          Home
-        </div>
-        <div
-          className={`dashboard-menu-item ${activeSection === 'profile' ? 'active' : ''}`}
-          onClick={() => setActiveSection('profile')}
-        >
-          Profile
-        </div>
-        <div
-          className={`dashboard-menu-item ${activeSection === 'users' ? 'active' : ''}`}
-          onClick={() => setActiveSection('users')}
-        >
-          Users
-        </div>
-        <div
-          className={`dashboard-menu-item ${activeSection === 'settings' ? 'active' : ''}`}
-          onClick={() => setActiveSection('settings')}
-        >
-          Settings
-        </div>
+        {['home', 'profile', 'users', 'settings'].map((section) => (
+          <div
+            key={section}
+            className={`dashboard-menu-item ${
+              activeSection === section ? 'active' : ''
+            }`}
+            onClick={() => setActiveSection(section)}
+          >
+            {section.charAt(0).toUpperCase() + section.slice(1)}
+          </div>
+        ))}
       </div>
 
       {/* Main Content */}
@@ -266,13 +233,33 @@ const Dashboard = () => {
             <div className="profile-actions">
               {isEditing ? (
                 <>
-                  <button className="btn btn-primary" onClick={handleSaveProfile}>Save</button>
-                  <button className="btn btn-secondary" onClick={handleCancelEdit}>Cancel</button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleSaveProfile}
+                  >
+                    Save
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={handleCancelEdit}
+                  >
+                    Cancel
+                  </button>
                 </>
               ) : (
                 <>
-                  <button className="btn btn-primary" onClick={handleEditToggle}>Edit</button>
-                  <button className="btn btn-secondary" onClick={() => setIsPasswordModalOpen(true)}>Change Password</button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleEditToggle}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setIsPasswordModalOpen(true)}
+                  >
+                    Change Password
+                  </button>
                 </>
               )}
             </div>
@@ -289,16 +276,11 @@ const Dashboard = () => {
           <UsersTable users={users} fetchUsers={fetchUsers} />
         )}
 
-        {isPasswordModalOpen && (
-          <PasswordModal
-            isOpen={isPasswordModalOpen}
-            onClose={() => setIsPasswordModalOpen(false)}
-            onSave={() => {
-              console.log('Password changed successfully');
-            }}
-          // Refresh users after password change
-          />
-        )}
+        <PasswordModal
+          isOpen={isPasswordModalOpen}
+          onClose={() => setIsPasswordModalOpen(false)}
+          onSave={() => alert('Password changed successfully')}
+        />
       </div>
     </div>
   );
