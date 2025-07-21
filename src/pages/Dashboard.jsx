@@ -1,5 +1,7 @@
+// src/components/Dashboard.js
 import React, { useState, useEffect } from 'react';
 import { authService } from '../service/authService';
+import '../styles/Dashboard.css';
 
 const PasswordModal = ({ isOpen, onClose, onSave }) => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -7,7 +9,14 @@ const PasswordModal = ({ isOpen, onClose, onSave }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (!isOpen) {
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setError('');
+    }
+  }, [isOpen]);
 
   const handleSave = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -19,14 +28,15 @@ const PasswordModal = ({ isOpen, onClose, onSave }) => {
       return;
     }
     try {
-      await authService.changePassword(currentPassword, newPassword);
+      await authService.changePassword(currentPassword, newPassword, confirmPassword);
       onSave();
       onClose();
     } catch (err) {
-      setError('Failed to change password');
-      console.error(err);
+      setError(err.response?.data?.message || 'Failed to change password');
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="modal-overlay">
@@ -58,12 +68,8 @@ const PasswordModal = ({ isOpen, onClose, onSave }) => {
         </div>
         {error && <div className="error-message">{error}</div>}
         <div className="modal-actions">
-          <button className="btn btn-primary" onClick={handleSave}>
-            Save
-          </button>
-          <button className="btn btn-secondary" onClick={onClose}>
-            Cancel
-          </button>
+          <button className="btn btn-primary" onClick={handleSave}>Save</button>
+          <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
         </div>
       </div>
     </div>
@@ -74,7 +80,7 @@ const UsersTable = ({ users, fetchUsers }) => {
   const handleDeleteUser = async (userId) => {
     try {
       await authService.deleteUser(userId);
-      fetchUsers(); // Refresh list
+      fetchUsers();
     } catch (error) {
       console.error('Error deleting user:', error);
       alert('Failed to delete user.');
@@ -100,13 +106,7 @@ const UsersTable = ({ users, fetchUsers }) => {
               <td>{user.username}</td>
               <td>{user.email}</td>
               <td>
-                <button className="btn btn-primary">Edit</button>
-                <button
-                  className="btn btn-danger"
-                  onClick={() => handleDeleteUser(user.id)}
-                >
-                  Delete
-                </button>
+                <button className="btn btn-danger" onClick={() => handleDeleteUser(user.id)}>Delete</button>
               </td>
             </tr>
           ))}
@@ -127,27 +127,35 @@ const Dashboard = () => {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchData = async () => {
       try {
         const currentUser = await authService.getCurrentUser();
+        // Defensive for both {role:[]} and {roles:[]}
         setUser(currentUser);
         setEditedUser(currentUser);
-        setIsAdmin(currentUser?.role?.includes('ROLE_ADMIN') || false);
+        setIsAdmin(
+          (currentUser?.roles && currentUser.roles.includes('ROLE_ADMIN')) ||
+          (currentUser?.role && currentUser.role.includes('ROLE_ADMIN')) ||
+          false
+        );
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        setUser(null);
+        // Redirect handled by interceptor, else add below:
+        window.location.href = '/login';
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserData();
+    fetchData();
     fetchUsers();
+    // eslint-disable-next-line
   }, []);
 
   const fetchUsers = async () => {
     try {
-      const response = await authService.getAllUsers();
-      setUsers(response.data);
+      const userList = await authService.getAllUsers();
+      setUsers(userList);
     } catch (error) {
       console.error('Error fetching users:', error);
     }
@@ -179,17 +187,17 @@ const Dashboard = () => {
   };
 
   if (loading) return <div className="loading-spinner">Loading...</div>;
+  if (!user)
+    return <div>You are not logged in. <a href="/login">Login</a></div>;
 
   return (
     <div className="dashboard-container">
       {/* Sidebar */}
       <div className="dashboard-sidebar">
-        {['home', 'profile', 'users', 'settings'].map((section) => (
+        {['home', 'profile', ...(isAdmin ? ['users'] : []), 'settings'].map((section) => (
           <div
             key={section}
-            className={`dashboard-menu-item ${
-              activeSection === section ? 'active' : ''
-            }`}
+            className={`dashboard-menu-item ${activeSection === section ? 'active' : ''}`}
             onClick={() => setActiveSection(section)}
           >
             {section.charAt(0).toUpperCase() + section.slice(1)}
@@ -202,13 +210,13 @@ const Dashboard = () => {
         {activeSection === 'home' && (
           <div className="dashboard-home">
             <h2>Welcome, {user?.username}</h2>
-            <p>Some Content</p>
+            <p>This is your dashboard home.</p>
           </div>
         )}
 
         {activeSection === 'profile' && (
           <div className="dashboard-profile">
-            <h2>User Profile Information</h2>
+            <h2>User Profile</h2>
             <div className="profile-field">
               <label>Username:</label>
               <input
@@ -233,33 +241,13 @@ const Dashboard = () => {
             <div className="profile-actions">
               {isEditing ? (
                 <>
-                  <button
-                    className="btn btn-primary"
-                    onClick={handleSaveProfile}
-                  >
-                    Save
-                  </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={handleCancelEdit}
-                  >
-                    Cancel
-                  </button>
+                  <button className="btn btn-primary" onClick={handleSaveProfile}>Save</button>
+                  <button className="btn btn-secondary" onClick={handleCancelEdit}>Cancel</button>
                 </>
               ) : (
                 <>
-                  <button
-                    className="btn btn-primary"
-                    onClick={handleEditToggle}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => setIsPasswordModalOpen(true)}
-                  >
-                    Change Password
-                  </button>
+                  <button className="btn btn-primary" onClick={handleEditToggle}>Edit</button>
+                  <button className="btn btn-secondary" onClick={() => setIsPasswordModalOpen(true)}>Change Password</button>
                 </>
               )}
             </div>
@@ -268,7 +256,8 @@ const Dashboard = () => {
 
         {activeSection === 'settings' && (
           <div className="dashboard-settings">
-            <h2>Settings Section</h2>
+            <h2>Settings</h2>
+            <p>Settings coming soon...</p>
           </div>
         )}
 

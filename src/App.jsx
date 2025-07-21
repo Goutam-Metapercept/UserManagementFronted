@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 
 import Navbar from './components/Navbar';
@@ -19,6 +19,7 @@ function App() {
           <Route path="/" element={<Mainpage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          
           {/* Protected Route */}
           <Route
             path="/dashboard"
@@ -28,6 +29,9 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Catch-all route for invalid paths */}
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
     </Router>

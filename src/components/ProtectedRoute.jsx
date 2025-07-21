@@ -1,14 +1,11 @@
-import React from 'react'
-import { authService } from '../service/authService'
+import React from 'react';
 import { Navigate } from 'react-router-dom';
-const ProtectedRoute = ({chldren}) => {
-  const isAuthenticated = authService.getCurrentUserFromLocalStorage() !== null;
-    if (!isAuthenticated) {
-        // Redirect to login page if not authenticate 
-        return <Navigate to="/login"/> // Prevent rendering the protected component
-    }
-    return chldren;
-        
-}
+import { authService } from '../service/authService';
 
-export default ProtectedRoute
+const ProtectedRoute = ({ children }) => {
+  const isLoggedIn = authService.getCurrentUserFromLocalStorage() !== null;
+
+  return isLoggedIn ? children : <Navigate to="/login" />;
+};
+
+export default ProtectedRoute;

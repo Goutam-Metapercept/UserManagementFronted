@@ -1,3 +1,4 @@
+// src/service/authService.js
 import axios from 'axios';
 
 const BASE_URL = 'http://localhost:8080/api';
@@ -10,6 +11,7 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// Attach token to requests
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -21,31 +23,13 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Handle 401 Unauthorized (redirect to login and clear local storage)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response) {
-      switch (error.response.status) {
-        case 401:
-          authService.logout();
-          window.location.href = '/login';
-          break;
-        case 403:
-          console.error('Access forbidden');
-          break;
-        case 404:
-          console.error('Resource not found');
-          break;
-        case 500:
-          console.error('Server error');
-          break;
-        default:
-          console.error('An error occurred:', error.response.data);
-      }
-    } else if (error.request) {
-      console.error('No response received from server:', error.request);
-    } else {
-      console.error('Request setup error:', error.message);
+    if (error.response && error.response.status === 401) {
+      authService.logout();
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
@@ -53,141 +37,75 @@ api.interceptors.response.use(
 
 const authService = {
   signupNormalUser: async (username, email, password) => {
-    try {
-      const response = await api.post('/auth/registernormaluser', {
-        username,
-        email,
-        password,
-      });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await api.post('/auth/registernormaluser', { username, email, password });
+    return response.data;
   },
 
- login: async (username, password) => {
-  try {
-    console.log('Sending login request:', { username, password });
+  login: async (username, password) => {
     const response = await api.post('/auth/login', { username, password });
-    console.log('Login response:', response);
-
     const { jwtToken, userDTO } = response.data;
-
-    // Optional: Store JWT token if you want to reuse it manually
     localStorage.setItem('token', jwtToken);
-
-    // Store user object
     localStorage.setItem('user', JSON.stringify(userDTO));
-
-    return userDTO; // return user object only if needed
-  } catch (error) {
-    console.error('Login error:', error);
-    throw error;
-  }
-},
-
+    return userDTO;
+  },
 
   getCurrentUser: async () => {
-    try {
-      const response = await api.get('/auth/getcurrentuser');
-      localStorage.setItem('user', JSON.stringify(response.data));
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching current user:', error);
-      if (error.response && error.response.status === 401) {
-        await authService.logout();
-      }
-      return null;
-    }
+    const response = await api.get('/auth/getcurrentuser');
+    return response.data;
   },
 
-getCurrentUserFromLocalStorage: () => {
-  const user = localStorage.getItem('user');
-  try {
+  getCurrentUserFromLocalStorage: () => {
+    const user = localStorage.getItem('user');
     return user ? JSON.parse(user) : null;
-  } catch (error) {
-    console.error('Error parsing user from localStorage:', error);
-    return null;
-  }
-},
+  },
 
   logout: async () => {
     try {
       await api.post('/auth/logout');
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error('Logout error:', error);
     } finally {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
     }
   },
 
-  isAuthenticated: async () => {
-    try {
-      const user = authService.getCurrentUserFromLocalStorage();
-      return user !== null;
-    } catch (error) {
-      console.error('Error checking authentication:', error);
-      return false;
-    }
-  },
-
   updateProfile: async (userData) => {
-    try {
-      const response = await api.put(
-        `/users/updateuser/${userData.id}`,
-        userData
-      );
-      const updatedUser = response.data;
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      return updatedUser;
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      throw error;
-    }
+    const response = await api.put(`/users/update/${userData.id}`, userData);
+    localStorage.setItem('user', JSON.stringify(response.data));
+    return response.data;
   },
 
   getAllUsers: async () => {
-    try {
-      const response = await api.get('/users/getallusers');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching all users:', error);
-      throw error;
-    }
+    const response = await api.get('/users/all');
+    return response.data;
   },
 
   deleteUser: async (userId) => {
-    try {
-      const response = await api.delete(`/users/deleteuser/${userId}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      throw error;
-    }
+    const response = await api.delete(`/users/delete/${userId}`);
+    return response.data;
   },
 
   changePassword: async (currentPassword, newPassword, confirmPassword) => {
-    try {
-      const currentUser = authService.getCurrentUserFromLocalStorage();
-      if (!currentUser || !currentUser.id) {
-        throw new Error('User not found');
-      }
-      const response = await api.put(
-        `/users/changepassword/${currentUser.id}`,
-        {
-          currentPassword,
-          newPassword,
-          confirmPassword,
-        }
-      );
-      return response.data;
-    } catch (error) {
-      console.error('Error changing password:', error);
-      throw error;
-    }
+    const currentUser = authService.getCurrentUserFromLocalStorage();
+    if (!currentUser?.id) throw new Error('User not found');
+    const response = await api.put(`/users/changepassword/${currentUser.id}`, {
+      currentPassword,
+      newPassword,
+      confirmPassword,
+    });
+    return response.data;
+  },
+
+  getUserById: async (userId) => {
+    const response = await api.get(`/users/getuserbyid/${userId}`);
+    return response.data;
+  },
+
+  getUserByUsername: async (username) => {
+    const response = await api.get(`/users/getuserbyusername/${username}`);
+    return response.data;
   },
 };
 
 export { api as default, authService };
-// Response interceptor for error handling
